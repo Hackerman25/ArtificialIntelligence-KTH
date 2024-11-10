@@ -71,7 +71,11 @@ class PlayerControllerMinimax(PlayerController):
 
             #print("fishesCORD: ", node.state.fish_positions[key], "distance: ", ((hookx-fishesx)**2+(hooky-fishesy)**2)**0.5)
 
-        mindistance = min(distancelist)
+        if len(distancelist) > 0:
+            mindistance = min(distancelist)
+        else:
+            mindistance = 0
+
         return mindistance
 
     def calc_heuristics(self, node):
@@ -158,7 +162,7 @@ class PlayerControllerMinimax(PlayerController):
         global Evaldict
         Evaldict = {}
 
-        bestscore = self.minimax(initial_tree_node,2,True)
+        bestscore = self.minimax(initial_tree_node,4,True)
         index = Evaldict[bestscore]
         print("bestscore ", bestscore)
 
