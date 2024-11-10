@@ -55,10 +55,10 @@ class PlayerControllerMinimax(PlayerController):
 
         distancelist = []
 
-        print("YYY length of fish pos: ", len(node.state.fish_positions), "dict: ", node.state.fish_positions)
+        #print("YYY length of fish pos: ", len(node.state.fish_positions), "dict: ", node.state.fish_positions)
         for key in node.state.fish_positions:
             #print("fish", node.state.fish_positions[i][0])
-            print("hook", node.state.hook_positions[0])
+            #print("hook", node.state.hook_positions[0])
 
             hookx = node.state.hook_positions[0][0]
             hooky = node.state.hook_positions[0][1]
@@ -69,32 +69,38 @@ class PlayerControllerMinimax(PlayerController):
 
             distancelist.append(  ((hookx-fishesx)**2+(hooky-fishesy)**2)**0.5  )
 
-            print("fishesCORD: ", node.state.fish_positions[key], "distance: ", ((hookx-fishesx)**2+(hooky-fishesy)**2)**0.5)
+            #print("fishesCORD: ", node.state.fish_positions[key], "distance: ", ((hookx-fishesx)**2+(hooky-fishesy)**2)**0.5)
 
         mindistance = min(distancelist)
         return mindistance
 
     def calc_heuristics(self, node):
 
-        print("@@@@@@@@",node.state.hook_positions[0][0], node.state.fish_positions)
+        #print("@@@@@@@@",node.state.hook_positions[0][0], node.state.fish_positions)
 
         #total_score = node.state.player_scores[0] - node.state.player_scores[1]
 
-        total_score = self.calc_distancetoclosestfish(node)
+        total_score = - self.calc_distancetoclosestfish(node)
 
         return total_score
 
 
     def minimax(self,node,depth_to_search,MaximizingPlayer):
+
+
         #MaxEval = -999999
         #print("depth to searcg: ", depth_to_search)
 
+
+
         if depth_to_search == 0:
 
-            return self.calc_heuristics(node)
+            Eval = self.calc_heuristics(node)
+            return Eval
 
         if MaximizingPlayer:
-            MaxEval = 999999
+            print("MAXEVAL")
+            MaxEval = -999999
 
 
             node.compute_and_get_children()
@@ -103,26 +109,30 @@ class PlayerControllerMinimax(PlayerController):
             for i in range(0,len(node.children)):
                 eval = self.minimax(node.children[i], depth_to_search - 1, False)
 
-                print("eval: ", eval)#,"action: ", child.state.)
-                if eval < MaxEval:
+                #print("eval: ", eval)#,"action: ", child.state.)
+                if eval > MaxEval:
                     MaxEval = eval
-                    MaxIndex = i
+                    Evaldict[eval] = i
 
             print("MaxEval: ", MaxEval,"MaxIndex: ", MaxIndex)
-            return MaxEval, MaxIndex
+            return MaxEval
 
         else:
+            print("MINEVAL")
             MinEval = 999999
 
-
             node.compute_and_get_children()
-            for child in node.children:
-                eval = self.minimax(child, depth_to_search-1, True)
-                print("eval: ", eval)
 
-                MinEval = min(MinEval, eval)
+            MinIndex = 0
+            for i in range(0, len(node.children)):
+                eval = self.minimax(node.children[i], depth_to_search - 1, True)
 
-            print("MinEval: ", MinEval)
+                #print("eval: ", eval)  # ,"action: ", child.state.)
+                if eval < MinEval:
+                    MinEval = eval
+                    Evaldict[eval] = i
+
+            print("MinEval: ", MinEval, "MinIndex: ", MinIndex)
             return MinEval
 
 
@@ -145,9 +155,13 @@ class PlayerControllerMinimax(PlayerController):
         #print(initial_tree_node.compute_and_get_children())
         #print(initial_tree_node.children)
 
-        bestscore, MaxIndex = self.minimax(initial_tree_node,1,True)
+        global Evaldict
+        Evaldict = {}
+
+        bestscore = self.minimax(initial_tree_node,2,True)
+        index = Evaldict[bestscore]
         print("bestscore ", bestscore)
 
 
         #random_move = random.randrange(1)
-        return ACTION_TO_STR[MaxIndex]
+        return ACTION_TO_STR[index]
