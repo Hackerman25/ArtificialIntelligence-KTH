@@ -80,13 +80,14 @@ class PlayerControllerMinimax(PlayerController):
 
     def calc_heuristics(self, node):
 
-        #print("@@@@@@@@",node.state.hook_positions[0][0], node.state.fish_positions)
+        distance_score = - self.calc_distancetoclosestfish(node)
 
-        #total_score = node.state.player_scores[0] - node.state.player_scores[1]
 
-        total_score = - self.calc_distancetoclosestfish(node)
+        #print("score: ", node.state.player_scores[0] , node.state.player_scores[1])
 
-        return total_score
+        player_score =   node.state.player_scores[0] - node.state.player_scores[1]
+        print("points:" , player_score)
+        return 2* player_score + distance_score
 
 
     def minimax(self,node,depth_to_search,MaximizingPlayer):
@@ -140,6 +141,54 @@ class PlayerControllerMinimax(PlayerController):
             return MinEval
 
 
+    def alphabeta(self,node,depth_to_search,alpha,beta,MaximizingPlayer):
+        #s t a t e : the curren t s t a t e we are analyzing
+        #α: the curren t be s t value ach ievab le by A
+        #β: the curren t be s t value ach ievab le by B
+        #p layer : the curren t p layer
+        #re turn s the minimax value o f the s t a t e
+
+        children = node.compute_and_get_children()
+
+        if depth_to_search == 0 or len(children) == 0:
+            return self.calc_heuristics(node), 0
+
+        best_index = 0
+
+
+        if MaximizingPlayer == True:
+            v = -999999
+            for i in range(0,len(node.children)):
+                eval, _ = self.alphabeta(node.children[i], depth_to_search - 1,alpha,beta, False)
+
+                #print("eval: ", eval)#,"action: ", child.state.)
+                if eval > v:
+                    v = eval
+                    best_index = i
+
+                alpha = max(alpha,v)
+                if beta <= alpha:
+                    break
+
+        else:
+            v = 999999      #THIS One
+            for i in range(0, len(node.children)):
+                eval, _ = self.alphabeta(node.children[i], depth_to_search - 1, alpha, beta, True)
+
+                # print("eval: ", eval)#,"action: ", child.state.)
+                if eval < v:
+                    v = eval
+                    best_index = i
+
+                beta = min(beta, v)
+                if beta >= alpha:
+                    break
+
+
+        return v, best_index
+
+
+
     def search_best_next_move(self, initial_tree_node):
         """
         Use minimax (and extensions) to find best possible next move for player 0 (green boat)
@@ -160,12 +209,17 @@ class PlayerControllerMinimax(PlayerController):
         #print(initial_tree_node.children)
 
         global Evaldict
-        Evaldict = {}
+        Evaldict = 0
 
-        bestscore = self.minimax(initial_tree_node,4,True)
-        index = Evaldict[bestscore]
-        print("bestscore ", bestscore)
+        #bestscore = self.minimax(initial_tree_node,4,True)
+
+        alpha = float('-inf')
+        beta = float('inf')
+        bestscore, best_index= self.alphabeta(initial_tree_node,4,alpha,beta,True)
+
+
+        print("bestscore ", bestscore,"action: ", best_index)
 
 
         #random_move = random.randrange(1)
-        return ACTION_TO_STR[index]
+        return ACTION_TO_STR[best_index]
