@@ -4,7 +4,7 @@ import random
 from fishing_game_core.game_tree import Node
 from fishing_game_core.player_utils import PlayerController
 from fishing_game_core.shared import ACTION_TO_STR
-
+import time
 
 class PlayerControllerHuman(PlayerController):
     def player_loop(self):
@@ -67,7 +67,7 @@ class PlayerControllerMinimax(PlayerController):
             fishesx = node.state.fish_positions[key][0]
             fishesy = node.state.fish_positions[key][1]
 
-            distancelist.append(  ((hookx-fishesx)**2+(hooky-fishesy)**2)**0.5  )
+            distancelist.append(  abs( min((hookx-fishesx),20-(hookx-fishesx))) + abs((hooky-fishesy)))
 
             #print("fishesCORD: ", node.state.fish_positions[key], "distance: ", ((hookx-fishesx)**2+(hooky-fishesy)**2)**0.5)
 
@@ -86,8 +86,8 @@ class PlayerControllerMinimax(PlayerController):
         #print("score: ", node.state.player_scores[0] , node.state.player_scores[1])
 
         player_score =   node.state.player_scores[0] - node.state.player_scores[1]
-        print("points:" , player_score)
-        return 2* player_score + distance_score
+        #print("points:" , player_score)
+        return 5* player_score + distance_score
 
 
     def minimax(self,node,depth_to_search,MaximizingPlayer):
@@ -104,7 +104,7 @@ class PlayerControllerMinimax(PlayerController):
             return Eval
 
         if MaximizingPlayer:
-            print("MAXEVAL")
+            #print("MAXEVAL")
             MaxEval = -999999
 
 
@@ -119,11 +119,11 @@ class PlayerControllerMinimax(PlayerController):
                     MaxEval = eval
                     Evaldict[eval] = i
 
-            print("MaxEval: ", MaxEval,"MaxIndex: ", MaxIndex)
+            #print("MaxEval: ", MaxEval,"MaxIndex: ", MaxIndex)
             return MaxEval
 
         else:
-            print("MINEVAL")
+            #print("MINEVAL")
             MinEval = 999999
 
             node.compute_and_get_children()
@@ -137,55 +137,103 @@ class PlayerControllerMinimax(PlayerController):
                     MinEval = eval
                     Evaldict[eval] = i
 
-            print("MinEval: ", MinEval, "MinIndex: ", MinIndex)
+            #print("MinEval: ", MinEval, "MinIndex: ", MinIndex)
             return MinEval
 
 
-    def alphabeta(self,node,depth_to_search,alpha,beta,MaximizingPlayer):
+    def alphabeta(self,node,state,depth_to_search,alpha,beta,initial_time,nodes_seen,MaximizingPlayer):
         #s t a t e : the curren t s t a t e we are analyzing
         #α: the curren t be s t value ach ievab le by A
         #β: the curren t be s t value ach ievab le by B
         #p layer : the curren t p layer
         #re turn s the minimax value o f the s t a t e
 
-        children = node.compute_and_get_children()
-
-        if depth_to_search == 0 or len(children) == 0:
-            return self.calc_heuristics(node), 0
-
-        best_index = 0
-
-
-        if MaximizingPlayer == True:
-            v = -999999
-            for i in range(0,len(node.children)):
-                eval, _ = self.alphabeta(node.children[i], depth_to_search - 1,alpha,beta, False)
-
-                #print("eval: ", eval)#,"action: ", child.state.)
-                if eval > v:
-                    v = eval
-                    best_index = i
-
-                alpha = max(alpha,v)
-                if beta <= alpha:
-                    break
-
+        if time.time() - initial_time > 0.055:
+            raise TimeoutError
         else:
-            v = 999999      #THIS One
-            for i in range(0, len(node.children)):
-                eval, _ = self.alphabeta(node.children[i], depth_to_search - 1, alpha, beta, True)
 
-                # print("eval: ", eval)#,"action: ", child.state.)
-                if eval < v:
-                    v = eval
-                    best_index = i
+            #check for repeated states
+            hashkey  = self.hash_table(state)[0]
+            if hashkey in nodes_seen and nodes_seen[hashkey] >= depth_to_search:
 
-                beta = min(beta, v)
-                if beta >= alpha:
-                    break
+                return nodes_seen[hashkey][0] , nodes_seen[hashkey][1]
 
 
+            children = node.compute_and_get_children()
+
+
+
+            #children.sort(key = self.calc_heuristics,reverse = True) # HERE WRONG @@@@@
+            #print("children: ", children.state.player_scores[0], type(children))
+
+            if depth_to_search == 0 or len(children) == 0:
+                return self.calc_heuristics(node), 0
+
+            best_index = 0
+
+
+            if MaximizingPlayer == True:
+                v = -999999
+                for i in range(0,len(node.children)):
+                    eval, action = self.alphabeta(node.children[i],node.children[i].state, depth_to_search - 1,alpha,beta, initial_time,nodes_seen,False)
+
+                    #print("eval: ", eval, "action: ", action)
+                    if eval > v:
+                        v = eval
+                        best_index = i
+
+                    alpha = max(alpha,v)
+                    if beta <= alpha:
+                        break
+
+            else:
+                v = 999999      #THIS One
+                for i in range(0, len(node.children)):
+                    eval, action = self.alphabeta(node.children[i], node.children[i].state, depth_to_search - 1, alpha, beta, initial_time,nodes_seen,True)
+
+                    #print("eval: ", eval, "action: ", action)
+                    if eval < v:
+                        v = eval
+                        best_index = i
+
+                    beta = min(beta, v)
+                    if beta >= alpha:
+                        break
+
+            hashkey = self.hash_table(state)
+            nodes_seen.update({hashkey:[v,best_index]})
         return v, best_index
+
+    def hash_table(self,state):
+
+
+        fishpos = state.get_fish_positions().items()
+        hookx = state.hook_positions[0][0]
+        hooky = state.hook_positions[0][1]
+
+        return str(fishpos) + str(hookx) + str(hooky)
+
+    def iterative_deepening_search(self, node, nodes_seen,max_depth):
+        initial_time = time.time()
+
+        best_move = 0
+
+        #value, best_move = self.alphabeta(node, 2, float('-inf'), float('inf'), initial_time, True)
+
+        try:
+
+
+
+            for depth in range(1, max_depth + 1):
+                value, move = self.alphabeta(node, node.state, depth, -float('inf'), float('inf'), initial_time, nodes_seen, True)
+                best_move = move
+                #print(best_move, value)
+
+
+        except TimeoutError:
+            pass
+
+        return best_move
 
 
 
@@ -215,10 +263,14 @@ class PlayerControllerMinimax(PlayerController):
 
         alpha = float('-inf')
         beta = float('inf')
-        bestscore, best_index= self.alphabeta(initial_tree_node,4,alpha,beta,True)
+        initial_time = time.time()
+        nodes_seen = dict()
 
+        #bestscore, best_index= self.alphabeta(initial_tree_node,initial_tree_node.state,3,alpha,beta,initial_time,nodes_seen,True)
 
-        print("bestscore ", bestscore,"action: ", best_index)
+        best_index = self.iterative_deepening_search(initial_tree_node, nodes_seen, 20)
+
+        #print("bestscore ", bestscore,"action: ", best_index)
 
 
         #random_move = random.randrange(1)
