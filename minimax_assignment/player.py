@@ -87,16 +87,10 @@ class PlayerControllerMinimax(PlayerController):
 
         player_score =   node.state.player_scores[0] - node.state.player_scores[1]
         #print("points:" , player_score)
-        return 5* player_score + distance_score
+        return 5* player_score# + distance_score
 
 
     def minimax(self,node,depth_to_search,MaximizingPlayer):
-
-
-        #MaxEval = -999999
-        #print("depth to searcg: ", depth_to_search)
-
-
 
         if depth_to_search == 0:
 
@@ -105,7 +99,7 @@ class PlayerControllerMinimax(PlayerController):
 
         if MaximizingPlayer:
             #print("MAXEVAL")
-            MaxEval = -999999
+            MaxEval = float('-inf')
 
 
             node.compute_and_get_children()
@@ -124,7 +118,7 @@ class PlayerControllerMinimax(PlayerController):
 
         else:
             #print("MINEVAL")
-            MinEval = 999999
+            MinEval = float('inf')
 
             node.compute_and_get_children()
 
@@ -148,14 +142,15 @@ class PlayerControllerMinimax(PlayerController):
         #p layer : the curren t p layer
         #re turn s the minimax value o f the s t a t e
 
-        if time.time() - initial_time > 0.055:
+
+        if time.time() - initial_time > 0.071:
             raise TimeoutError
         else:
 
             #check for repeated states
             hashkey  = self.hash_table(state)[0]
             if hashkey in nodes_seen and nodes_seen[hashkey] >= depth_to_search:
-
+                print("REPEATED STATES")
                 return nodes_seen[hashkey][0] , nodes_seen[hashkey][1]
 
 
@@ -173,7 +168,7 @@ class PlayerControllerMinimax(PlayerController):
 
 
             if MaximizingPlayer == True:
-                v = -999999
+                v = float('-inf')
                 for i in range(0,len(node.children)):
                     eval, action = self.alphabeta(node.children[i],node.children[i].state, depth_to_search - 1,alpha,beta, initial_time,nodes_seen,False)
 
@@ -187,7 +182,7 @@ class PlayerControllerMinimax(PlayerController):
                         break
 
             else:
-                v = 999999      #THIS One
+                v = float('inf')      #THIS One
                 for i in range(0, len(node.children)):
                     eval, action = self.alphabeta(node.children[i], node.children[i].state, depth_to_search - 1, alpha, beta, initial_time,nodes_seen,True)
 
