@@ -41,10 +41,14 @@ def matrixmult(a,b):
 
 
 def main():
-    # Example input data
-    data = """4 4 0.2 0.5 0.3 0.0 0.1 0.4 0.4 0.1 0.2 0.0 0.4 0.4 0.2 0.3 0.0 0.5
-    4 3 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.2 0.6 0.2
-    1 4 0.0 0.0 0.0 1.0"""
+
+
+    #read data
+    data = input()
+    data += "\n" + input()
+    data += "\n" + input()
+    print(data)
+
 
     # Read matrices
     matrices = read_matrices(data)

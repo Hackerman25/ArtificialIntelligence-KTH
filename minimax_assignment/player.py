@@ -158,7 +158,7 @@ class PlayerControllerMinimax(PlayerController):
 
 
 
-            #children.sort(key = self.calc_heuristics,reverse = True) # HERE WRONG @@@@@
+            #children.sort(key = self.calc_heuristics,reverse = True) # HERE WRONG BCUZ min max depending on player!!
             #print("children: ", children.state.player_scores[0], type(children))
 
             if depth_to_search == 0 or len(children) == 0:
