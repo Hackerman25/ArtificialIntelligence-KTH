@@ -18,12 +18,9 @@ def read_matrices(data):
 
 
 
-
-
-
 def matrixmult(a,b):
     output = [[0] * len(b[0])]*len(a)
-    print(output)
+    #print(output)
 
     for i in range(len(a)):
 
@@ -47,40 +44,47 @@ def main():
     data = input()
     data += "\n" + input()
     data += "\n" + input()
-    print(data)
+    #print(data)
 
 
     # Read matrices
     matrices = read_matrices(data)
 
+    """
     # Print matrices
     for matrix in matrices:
         for row in matrix:
             print(row)
         print()
-
+    """
     # calc output
 
+    init_prob = matrices[2]
+    obs_matrix = matrices[1]
+    trans_matrix = matrices[0]
 
-    """
-    for i in range(len(matrices[1][0])):
-        tmp = 0
-        #print(len(matrices[1]),"dkdkd")
-        for e in range(len(matrices[1])):
-    
-            tmp = tmp + matrices[1][e][i] * ProbObsEachObs[e]
-            #tmp = tmp + matrices[0][e][i] * matrices[2][0][e]
-        ans.append(round(tmp,2))
-    """
-    ans = matrixmult(matrices[2], matrices[0])
-    print(ans)
 
-    an2 = matrixmult(ans, matrices[1])
+    ans = matrixmult(init_prob, trans_matrix)
+    prob_dist = matrixmult(ans, obs_matrix)
 
-    print(an2, "ans")
+    nrows = len(prob_dist)
+
+    try:
+        ncols = len(prob_dist[0])
+    except:
+        ncols = 1
+
+    [prob_dist_with_shape] = prob_dist
+    prob_dist_with_shape.insert(0,ncols)
+    prob_dist_with_shape.insert(0, nrows)
+
     #transition matrix = matrix of prob to go from state to other state
     #emission matrix   = matrix of prob to get to observed based on state
     # initial state probability distribution = initial states prob
+
+    print(*prob_dist_with_shape, sep=" ")
+
+
 
 
 if __name__ == "__main__":

@@ -87,7 +87,7 @@ class PlayerControllerMinimax(PlayerController):
 
         player_score =   node.state.player_scores[0] - node.state.player_scores[1]
         #print("points:" , player_score)
-        return 5* player_score# + distance_score
+        return 5* player_score + distance_score
 
 
     def minimax(self,node,depth_to_search,MaximizingPlayer):
@@ -122,7 +122,6 @@ class PlayerControllerMinimax(PlayerController):
 
             node.compute_and_get_children()
 
-            MinIndex = 0
             for i in range(0, len(node.children)):
                 eval = self.minimax(node.children[i], depth_to_search - 1, True)
 
