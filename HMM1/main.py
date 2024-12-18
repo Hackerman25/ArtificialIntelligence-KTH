@@ -17,7 +17,7 @@ def read_data(data):
 
 
 
-    last_line_values = list(map(int, lines[-1].split()))[2:]
+    last_line_values = list(map(int, lines[-1].split()))[1:]
     matrices.append(last_line_values)
     return matrices
 
@@ -53,61 +53,46 @@ def main():
     init_prob = handledfile[2]    #Pi
     sequence_of_emissions = handledfile[3] # output
 
+    A = trans_matrix
+    B = obs_matrix
+    π = init_prob
+    o_seq = sequence_of_emissions
 
-    print(trans_matrix)
-    print(obs_matrix)
-    print(init_prob)
-    print(sequence_of_emissions)
+
+
+
+
+    #print(trans_matrix)
+    #print(obs_matrix)
+    #print(init_prob)
+    #print(sequence_of_emissions)
     #print(obs_matrix)
     #print(init_prob)
 
 
-    def forward_alg(trans_matrix,obs_matrix,init_prob,sequence_of_emissions):
+    def forward_alg(A, B, π, o_seq):
+        observation_0 = o_seq[0]
+        a_vector = [None]*len(o_seq)
+        a_0 = [None]*len(A)
 
-        observation_0 = sequence_of_emissions[0]
-
-
-
-
-        a_vector = [None]*len(sequence_of_emissions)
-        a_0 = [None]*len(trans_matrix)
-
-
-        for i in range(0,len(trans_matrix)): #correct
-
-            a_0[i] = int(init_prob[0][i]) * obs_matrix[i][int(observation_0)]
+        for i in range(0,len(A)): #correct
+            a_0[i] = float(π[0][i]) * float(B[i][int(observation_0)])
         a_vector[0] = a_0
 
-
-
-
-
-        for t in range(1,len(sequence_of_emissions)):
-
-            observation_t = sequence_of_emissions[t]
-
-
+        for t in range(1,len(o_seq)):
+            observation_t = o_seq[t]
             a_t_prev = a_vector[t-1]
 
-            a_t = [None] * len(trans_matrix)
-            for i in range(0,len(trans_matrix)):
+            a_t = [None] * len(A)
+            for i in range(0,len(A)):
                 sum = 0
-                for j in range(0,len(trans_matrix)):
-                    sum += a_t_prev[j] * trans_matrix[j][i]
-
-                a_t[i] = sum * obs_matrix[i][observation_t]
-
+                for j in range(0,len(A)):
+                    sum += float(a_t_prev[j]) * float(A[j][i])
+                a_t[i] = sum * float(B[i][int(observation_t)])
             a_vector[t] = a_t
 
-
-        """
-        alpha = [[init_prob[0][i] * obs_matrix[i][sequence_of_emissions[0]] for i in range(len(init_prob[0]))]]
-        for t in range(1, len(sequence_of_emissions)):
-            alpha.append([sum([alpha[t - 1][j] * trans_matrix[j][i]
-                for j in range(len(trans_matrix))]) * obs_matrix[i][sequence_of_emissions[t]] for i in range(len(trans_matrix))])
-        """
-
         return a_vector
+
 
 
 
@@ -117,7 +102,7 @@ def main():
     output = sum(a_vector[-1])
 
     #output2 = sum(alpha[-1])
-    print(output,"output")
+    print(output)
 
 if __name__ == "__main__":
 
